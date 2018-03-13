@@ -1,9 +1,8 @@
-package com.company.sorchanolan;
+package ie.tcd.websearch;
 
 import org.apache.lucene.document.*;
 
 import java.io.File;
-import java.io.PrintWriter;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Scanner;

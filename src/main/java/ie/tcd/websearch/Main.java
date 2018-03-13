@@ -1,4 +1,4 @@
-package com.company.sorchanolan;
+package ie.tcd.websearch;
 
 import org.apache.lucene.analysis.Analyzer;
 import org.apache.lucene.analysis.core.StopAnalyzer;

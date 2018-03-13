@@ -1,4 +1,4 @@
-package com.company.sorchanolan;
+package ie.tcd.websearch;
 
 import lombok.Data;
 
