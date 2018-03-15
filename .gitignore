@@ -25,3 +25,4 @@ hs_err_pid*
 
 docs/*
 trec_eval/*
+MySearchEngine.iml

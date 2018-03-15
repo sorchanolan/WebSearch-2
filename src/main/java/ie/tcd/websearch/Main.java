@@ -35,7 +35,7 @@ public class Main {
 
   public Main() throws Exception {
     TopicParser topicParser = new TopicParser();
-    topicParser.parseTopics();
+    List<Topic> topics = topicParser.parseTopics();
 
     CranfieldParser cranfieldParser = new CranfieldParser();
     cranfieldParser.parseRelevanceJudgements();
