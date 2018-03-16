@@ -45,10 +45,10 @@ public class FederalRegisterDocsParser extends BaseParser {
   }
 
   public List<FederalRegisterDoc> getDocs() {
-return this.federalRegisterDocs;
+    return this.federalRegisterDocs;
 }
 
   public void removeDocs() {
-this.federalRegisterDocs.clear();
+    this.federalRegisterDocs.clear();
 }
 }
