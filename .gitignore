@@ -22,3 +22,7 @@
 hs_err_pid*
 
 .idea/
+
+docs/*
+trec_eval/*
+MySearchEngine.iml
