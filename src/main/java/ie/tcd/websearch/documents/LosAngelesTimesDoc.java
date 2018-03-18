@@ -22,8 +22,7 @@ public class LosAngelesTimesDoc extends BaseDoc {
     doc.add(new StringField("date", this.getDate(), Field.Store.YES));
     doc.add(new TextField("headline", this.getHeadline(), Field.Store.YES));
     doc.add(new TextField("byline", this.getByline(), Field.Store.YES));
-    doc.add(new TextField("text", this.getText(), Field.Store.YES));
-    doc.add(new TextField("graphicCaption", this.getGraphicCaption(), Field.Store.YES));
+    doc.add(new TextField("text", (this.getText() + this.getGraphicCaption()), Field.Store.YES)); //concatenate graphicCaption to text for doc indexing
     doc.add(new TextField("publication", this.getPublication(), Field.Store.YES));
     doc.add(new TextField("meta", this.getSection(), Field.Store.YES));
     doc.add(new IntPoint("length", this.getLength()));
