@@ -49,10 +49,10 @@ public class LosAngelesTimesDocsParser extends BaseParser {
   }
 
   public List<LosAngelesTimesDoc> getDocs() {
-  return this.losAngelesTimesDocs;
-}
+    return this.losAngelesTimesDocs;
+  }
 
   public void removeDocs() {
-  this.losAngelesTimesDocs.clear();
-}
+    this.losAngelesTimesDocs.clear();
+  }
 }

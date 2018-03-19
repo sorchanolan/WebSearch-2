@@ -46,9 +46,9 @@ public class FinancialTimesDocsParser extends BaseParser {
       } catch (IOException | JDOMException e) {
         e.printStackTrace();
       }
-  }
+    }
 
-  System.out.println(String.format("%s Processed %d docs", DOCUMENT_ROOT_PATH, count));
+    System.out.println(String.format("%s Processed %d docs", DOCUMENT_ROOT_PATH, count));
   }
 
   public List<FinancialTimesDoc> getDocs() {
