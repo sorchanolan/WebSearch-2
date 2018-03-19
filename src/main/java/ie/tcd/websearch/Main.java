@@ -54,6 +54,9 @@ public class Main {
     frParser.getDocs();
     frParser.removeDocs();
 
+    TopicParser topicParser = new TopicParser();
+    List<Topic> topics = topicParser.parseTopics();
+
     CranfieldParser cranfieldParser = new CranfieldParser();
     cranfieldParser.parseRelevanceJudgements();
     List<Document> documents = cranfieldParser.parseDocuments();
