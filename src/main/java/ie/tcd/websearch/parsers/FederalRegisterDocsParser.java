@@ -1,5 +1,6 @@
 package ie.tcd.websearch.parsers;
 
+import ie.tcd.websearch.Indexer;
 import ie.tcd.websearch.documents.FederalRegisterDoc;
 import org.jdom2.Element;
 import org.jdom2.JDOMException;
@@ -14,7 +15,7 @@ public class FederalRegisterDocsParser extends BaseParser {
   private static String DOCUMENT_ROOT_PATH = "docs/fr94/";
   private List<FederalRegisterDoc> federalRegisterDocs = new ArrayList<>();
 
-  public FederalRegisterDocsParser() {
+  public FederalRegisterDocsParser(Indexer indexer) throws Exception {
     List<Path> files = this.getFiles(DOCUMENT_ROOT_PATH);
     int count = 0;
     for(Path file : files) {
@@ -33,12 +34,14 @@ public class FederalRegisterDocsParser extends BaseParser {
             frDoc.setLength(frDoc.getText().length());
           }
 
+          indexer.createIndexEntry(frDoc.convertToLuceneDoc());
           //        this.federalRegisterDocs.add(laDoc);
         }
 
       } catch (IOException | JDOMException e) {
           e.printStackTrace();
         }
+      break;
     }
 
     System.out.println(String.format("%s Processed %d docs", DOCUMENT_ROOT_PATH, count));

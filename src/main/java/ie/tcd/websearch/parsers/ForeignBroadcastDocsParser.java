@@ -1,5 +1,6 @@
 package ie.tcd.websearch.parsers;
 
+import ie.tcd.websearch.Indexer;
 import ie.tcd.websearch.documents.FinancialTimesDoc;
 import ie.tcd.websearch.documents.ForeignBroadcastDoc;
 import org.jdom2.Element;
@@ -14,7 +15,7 @@ public class ForeignBroadcastDocsParser extends BaseParser {
   private static String DOCUMENT_ROOT_PATH = "docs/fbis/";
   private List<ForeignBroadcastDoc> foreignBroadcastDocs = new ArrayList<>();
 
-  public ForeignBroadcastDocsParser() {
+  public ForeignBroadcastDocsParser(Indexer indexer) throws Exception {
 
     List<Path> files = this.getFiles(DOCUMENT_ROOT_PATH);
     int count = 0;
@@ -37,12 +38,14 @@ public class ForeignBroadcastDocsParser extends BaseParser {
             fbDoc.setLength(fbDoc.getText().length());
           }
 
+          indexer.createIndexEntry(fbDoc.convertToLuceneDoc());
 //          this.foreignBroadcastDocs.add(fbDoc);
         }
 
       } catch (IOException | JDOMException e) {
         e.printStackTrace();
       }
+      break;
     }
 
     System.out.println(String.format("%s Processed %d docs", DOCUMENT_ROOT_PATH, count));

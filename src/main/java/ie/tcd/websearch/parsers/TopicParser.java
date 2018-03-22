@@ -1,5 +1,6 @@
-package ie.tcd.websearch;
+package ie.tcd.websearch.parsers;
 
+import ie.tcd.websearch.Topic;
 import org.apache.lucene.document.*;
 
 import java.io.File;

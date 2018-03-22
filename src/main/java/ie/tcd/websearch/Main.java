@@ -1,9 +1,6 @@
 package ie.tcd.websearch;
 
-import ie.tcd.websearch.parsers.FederalRegisterDocsParser;
-import ie.tcd.websearch.parsers.FinancialTimesDocsParser;
-import ie.tcd.websearch.parsers.ForeignBroadcastDocsParser;
-import ie.tcd.websearch.parsers.LosAngelesTimesDocsParser;
+import ie.tcd.websearch.parsers.*;
 import org.apache.lucene.analysis.Analyzer;
 import org.apache.lucene.analysis.core.StopAnalyzer;
 import org.apache.lucene.analysis.core.WhitespaceAnalyzer;
@@ -38,19 +35,20 @@ public class Main {
   }
 
   public Main() throws Exception {
-    FinancialTimesDocsParser ftParser = new FinancialTimesDocsParser();
+    Indexer indexer = new Indexer(new StandardAnalyzer(), new BM25Similarity());
+    FinancialTimesDocsParser ftParser = new FinancialTimesDocsParser(indexer);
     ftParser.getDocs();
     ftParser.removeDocs();
 
-    ForeignBroadcastDocsParser fbParser = new ForeignBroadcastDocsParser();
+    ForeignBroadcastDocsParser fbParser = new ForeignBroadcastDocsParser(indexer);
     fbParser.getDocs();
     fbParser.removeDocs();
 
-    LosAngelesTimesDocsParser latParser = new LosAngelesTimesDocsParser();
+    LosAngelesTimesDocsParser latParser = new LosAngelesTimesDocsParser(indexer);
     latParser.getDocs();
     latParser.removeDocs();
 
-    FederalRegisterDocsParser frParser = new FederalRegisterDocsParser();
+    FederalRegisterDocsParser frParser = new FederalRegisterDocsParser(indexer);
     frParser.getDocs();
     frParser.removeDocs();
 

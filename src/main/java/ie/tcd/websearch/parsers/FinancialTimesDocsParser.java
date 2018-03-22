@@ -1,5 +1,6 @@
 package ie.tcd.websearch.parsers;
 
+import ie.tcd.websearch.Indexer;
 import ie.tcd.websearch.documents.FinancialTimesDoc;
 import org.jdom2.Element;
 import org.jdom2.JDOMException;
@@ -14,8 +15,7 @@ public class FinancialTimesDocsParser extends BaseParser {
   private static String DOCUMENT_ROOT_PATH = "docs/ft/";
   private List<FinancialTimesDoc> financialTimesDocs = new ArrayList<>();
 
-  public FinancialTimesDocsParser() {
-
+  public FinancialTimesDocsParser(Indexer indexer) throws Exception {
     List<Path> files = this.getFiles(DOCUMENT_ROOT_PATH);
     int count = 0;
     for(Path file : files) {
@@ -41,11 +41,13 @@ public class FinancialTimesDocsParser extends BaseParser {
             ftDoc.setLength(ftDoc.getText().length());
           }
 
+          indexer.createIndexEntry(ftDoc.convertToLuceneDoc());
 //          this.financialTimesDocs.add(ftDoc);
         }
       } catch (IOException | JDOMException e) {
         e.printStackTrace();
       }
+      break;
     }
 
     System.out.println(String.format("%s Processed %d docs", DOCUMENT_ROOT_PATH, count));
