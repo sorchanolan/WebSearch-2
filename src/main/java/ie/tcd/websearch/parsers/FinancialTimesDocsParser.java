@@ -35,7 +35,7 @@ public class FinancialTimesDocsParser extends BaseParser {
 
           Element headline = doc.getChild("HEADLINE");
           if (headline != null) {
-            ftDoc.setHeadline(headline.getTextTrim());
+            ftDoc.setHeadline(Optional.ofNullable(headline.getTextTrim()).orElse(""));
           }
 
           if (ftDoc.getText() != null) {
@@ -48,7 +48,8 @@ public class FinancialTimesDocsParser extends BaseParser {
       } catch (IOException | JDOMException e) {
         e.printStackTrace();
       }
-      break;
+//      break;
+      System.out.println(String.format("%d/%d files indexed", files.indexOf(file), files.size()));
     }
 
     System.out.println(String.format("%s Processed %d docs", DOCUMENT_ROOT_PATH, count));

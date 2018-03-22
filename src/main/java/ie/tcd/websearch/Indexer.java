@@ -11,23 +11,24 @@ import org.apache.lucene.store.FSDirectory;
 import java.nio.file.Paths;
 
 public class Indexer {
-  private static String INDEX_PATH = "index-";
-  private Analyzer analyzer;
-  private Similarity similarity;
+  private static String INDEX_PATH = "index";
+  private IndexWriterConfig config;
+  private Directory directory;
+  private final IndexWriter writer;
 
   public Indexer(Analyzer analyzer, Similarity similarity) throws Exception {
-    this.analyzer = analyzer;
-    this.similarity = similarity;
+    config = new IndexWriterConfig(analyzer);
+    config.setOpenMode(IndexWriterConfig.OpenMode.CREATE_OR_APPEND);
+    config.setSimilarity(similarity);
+    directory = FSDirectory.open(Paths.get(INDEX_PATH));
+    writer = new IndexWriter(directory, config);
   }
 
   public void createIndexEntry(Document document) throws Exception {
-    IndexWriterConfig config = new IndexWriterConfig(analyzer);
-    config.setOpenMode(IndexWriterConfig.OpenMode.CREATE_OR_APPEND);
-    config.setSimilarity(similarity);
-    Directory directory = FSDirectory.open(Paths.get(INDEX_PATH));
-
-    final IndexWriter writer = new IndexWriter(directory, config);
     writer.addDocument(document);
+  }
+
+  public void closeIndex() throws Exception {
     writer.close();
     directory.close();
   }

@@ -52,6 +52,8 @@ public class Main {
     frParser.getDocs();
     frParser.removeDocs();
 
+    indexer.closeIndex();
+
     TopicParser topicParser = new TopicParser();
     List<Topic> topics = topicParser.parseTopics();
 
