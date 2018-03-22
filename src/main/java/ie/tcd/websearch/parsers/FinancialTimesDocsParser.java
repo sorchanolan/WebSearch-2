@@ -9,6 +9,7 @@ import java.io.IOException;
 import java.nio.file.Path;
 import java.util.ArrayList;
 import java.util.List;
+import java.util.Optional;
 
 public class FinancialTimesDocsParser extends BaseParser {
 
@@ -25,12 +26,12 @@ public class FinancialTimesDocsParser extends BaseParser {
         for (Element doc : docs) {
           FinancialTimesDoc ftDoc = new FinancialTimesDoc();
 
-          ftDoc.setDocNo(doc.getChildTextTrim("DOCNO"));
-          ftDoc.setProfile(doc.getChildTextTrim("PROFILE"));
-          ftDoc.setDate(doc.getChildTextTrim("DATE"));
-          ftDoc.setText(doc.getChildTextTrim("TEXT"));
-          ftDoc.setPublication(doc.getChildTextTrim("PUB"));
-          ftDoc.setPage(doc.getChildTextTrim("PAGE"));
+          ftDoc.setDocNo(Optional.ofNullable(doc.getChildTextTrim("DOCNO")).orElse(""));
+          ftDoc.setProfile(Optional.ofNullable(doc.getChildTextTrim("PROFILE")).orElse(""));
+          ftDoc.setDate(Optional.ofNullable(doc.getChildTextTrim("DATE")).orElse(""));
+          ftDoc.setText(Optional.ofNullable(doc.getChildTextTrim("TEXT")).orElse(""));
+          ftDoc.setPublication(Optional.ofNullable(doc.getChildTextTrim("PUB")).orElse(""));
+          ftDoc.setPage(Optional.ofNullable(doc.getChildTextTrim("PAGE")).orElse(""));
 
           Element headline = doc.getChild("HEADLINE");
           if (headline != null) {

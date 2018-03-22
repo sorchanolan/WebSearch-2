@@ -9,6 +9,7 @@ import java.io.IOException;
 import java.nio.file.Path;
 import java.util.ArrayList;
 import java.util.List;
+import java.util.Optional;
 
 public class FederalRegisterDocsParser extends BaseParser {
 
@@ -25,10 +26,10 @@ public class FederalRegisterDocsParser extends BaseParser {
         for (Element doc : docs) {
           FederalRegisterDoc frDoc = new FederalRegisterDoc();
 
-          frDoc.setDocNo(doc.getChildTextTrim("DOCNO"));
-          frDoc.setDate(doc.getChildTextTrim("DATE"));
-          frDoc.setText(doc.getChildTextTrim("TEXT"));
-          frDoc.setParent(doc.getChildTextTrim("PARENT"));
+          frDoc.setDocNo(Optional.ofNullable(doc.getChildTextTrim("DOCNO")).orElse(""));
+          frDoc.setDate(Optional.ofNullable(doc.getChildTextTrim("DATE")).orElse(""));
+          frDoc.setText(Optional.ofNullable(doc.getChildTextTrim("TEXT")).orElse(""));
+          frDoc.setParent(Optional.ofNullable(doc.getChildTextTrim("PARENT")).orElse(""));
 
           if (frDoc.getText() != null) {
             frDoc.setLength(frDoc.getText().length());

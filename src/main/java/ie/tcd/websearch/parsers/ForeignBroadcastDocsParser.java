@@ -10,6 +10,7 @@ import java.io.IOException;
 import java.nio.file.Path;
 import java.util.ArrayList;
 import java.util.List;
+import java.util.Optional;
 
 public class ForeignBroadcastDocsParser extends BaseParser {
   private static String DOCUMENT_ROOT_PATH = "docs/fbis/";
@@ -26,13 +27,13 @@ public class ForeignBroadcastDocsParser extends BaseParser {
         for (Element doc : docs) {
           ForeignBroadcastDoc fbDoc = new ForeignBroadcastDoc();
 
-          fbDoc.setDocNo(doc.getChildTextTrim("DOCNO"));
-          fbDoc.setOriginalId(doc.getChildTextTrim("HT"));
-          fbDoc.setAuthor(doc.getChildTextTrim("AU"));
-          fbDoc.setDate(doc.getChildTextTrim("DATE1"));
-          fbDoc.setHeadline(doc.getChildTextTrim("HT"));
-          fbDoc.setByline(doc.getChildTextTrim("H4"));
-          fbDoc.setText(doc.getChildTextTrim("TEXT"));
+          fbDoc.setDocNo(Optional.ofNullable(doc.getChildTextTrim("DOCNO")).orElse(""));
+          fbDoc.setOriginalId(Optional.ofNullable(doc.getChildTextTrim("HT")).orElse(""));
+          fbDoc.setAuthor(Optional.ofNullable(doc.getChildTextTrim("AU")).orElse(""));
+          fbDoc.setDate(Optional.ofNullable(doc.getChildTextTrim("DATE1")).orElse(""));
+          fbDoc.setHeadline(Optional.ofNullable(doc.getChildTextTrim("HT")).orElse(""));
+          fbDoc.setByline(Optional.ofNullable(doc.getChildTextTrim("H4")).orElse(""));
+          fbDoc.setText(Optional.ofNullable(doc.getChildTextTrim("TEXT")).orElse(""));
 
           if (fbDoc.getText() != null) {
             fbDoc.setLength(fbDoc.getText().length());
