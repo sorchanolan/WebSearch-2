@@ -12,6 +12,14 @@ public class FinancialTimesDoc extends BaseDoc {
   private String publication;
   private String page;
 
+  public FinancialTimesDoc() {
+    this.profile = "";
+    this.date = "";
+    this.headline = "";
+    this.publication = "";
+    this.page = "";
+  }
+
   @Override
   public Document convertToLuceneDoc() {
     Document doc = new Document();

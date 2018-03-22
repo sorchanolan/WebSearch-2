@@ -18,7 +18,7 @@ public class Indexer {
 
   public Indexer(Analyzer analyzer, Similarity similarity) throws Exception {
     config = new IndexWriterConfig(analyzer);
-    config.setOpenMode(IndexWriterConfig.OpenMode.CREATE_OR_APPEND);
+    config.setOpenMode(IndexWriterConfig.OpenMode.CREATE);
     config.setSimilarity(similarity);
     directory = FSDirectory.open(Paths.get(INDEX_PATH));
     writer = new IndexWriter(directory, config);

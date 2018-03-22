@@ -13,6 +13,14 @@ public class ForeignBroadcastDoc extends BaseDoc {
   private String byline;
   private String publication = "Foreign Broadcast Information Service";
 
+  public ForeignBroadcastDoc() {
+    this.originalId = "";
+    this.author = "";
+    this.date = "";
+    this.headline = "";
+    this.byline = "";
+  }
+
   @Override
   public Document convertToLuceneDoc() {
     Document doc = new Document();

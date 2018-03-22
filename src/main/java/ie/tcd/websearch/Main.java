@@ -35,6 +35,7 @@ public class Main {
   }
 
   public Main() throws Exception {
+    long startTime = System.currentTimeMillis();
     Indexer indexer = new Indexer(new StandardAnalyzer(), new BM25Similarity());
     FinancialTimesDocsParser ftParser = new FinancialTimesDocsParser(indexer);
     ftParser.getDocs();
@@ -53,56 +54,58 @@ public class Main {
     frParser.removeDocs();
 
     indexer.closeIndex();
+    long timeMins = ((System.currentTimeMillis() - startTime) / 1000) / 60;
+    System.out.println(String.format("Indexing took %d minutes", timeMins));
 
     TopicParser topicParser = new TopicParser();
     List<Topic> topics = topicParser.parseTopics();
 
-    CranfieldParser cranfieldParser = new CranfieldParser();
-    cranfieldParser.parseRelevanceJudgements();
-    List<Document> documents = cranfieldParser.parseDocuments();
-    List<Query> queries = cranfieldParser.parseQueries();
-
-    List<AnalyserObj> analyzers = new ArrayList<>();
-    analyzers.add(new AnalyserObj(new StandardAnalyzer(), "Standard"));
-    analyzers.add(new AnalyserObj(new WhitespaceAnalyzer(), "Whitespace"));
-    analyzers.add(new AnalyserObj(new EnglishAnalyzer(), "English"));
-    analyzers.add(new AnalyserObj(new StopAnalyzer(), "Stop"));
-
-    List<SimilarityObj> similarities = new ArrayList<>();
-    similarities.add(new SimilarityObj(new ClassicSimilarity(), "Classic"));
-    similarities.add(new SimilarityObj(new BM25Similarity(), "BM25"));
-    similarities.add(new SimilarityObj(new BooleanSimilarity(), "Boolean"));
-
-    List<Results> resultsList = new ArrayList<>();
-
-    for (SimilarityObj similarity : similarities) {
-      for (AnalyserObj analyzer : analyzers) {
-        Path indexPath = Paths.get(String.format("index-%s-%s", analyzer.getName(), similarity.getName()));
-        String resultsPath = String.format("trec-qrels-results-%s-%s.txt", analyzer.getName(), similarity.getName());
-        createIndex(documents, analyzer.getAnalyzer(), similarity.getSimilarity(), indexPath);
-        search(queries, analyzer.getAnalyzer(), similarity.getSimilarity(), indexPath, resultsPath);
-
-        Results results = new Results();
-        results.setAnalyzer(analyzer.getName());
-        results.setSimilarity(similarity.getName());
-        resultsList.add(runTrecEval(qrelsPath, resultsPath, results, analyzer.getName(), similarity.getName()));
-      }
-    }
-
-    Results bestResults = getBestResults(resultsList);
-    System.out.format("\nSystem with %s Analyser and %s scoring performs the best.\n", bestResults.getAnalyzer(), bestResults.getSimilarity());
-    Analyzer bestAnalyser = analyzers.stream()
-        .filter(analyserObj -> analyserObj.getName().equals(bestResults.getAnalyzer()))
-        .map(AnalyserObj::getAnalyzer)
-        .findFirst()
-        .get();
-    Similarity bestSimilarity = similarities.stream()
-        .filter(similarityObj -> similarityObj.getName().equals(bestResults.getSimilarity()))
-        .map(SimilarityObj::getSimilarity)
-        .findFirst()
-        .get();
-
-    runSearchEngine(bestResults, bestAnalyser, bestSimilarity);
+//    CranfieldParser cranfieldParser = new CranfieldParser();
+//    cranfieldParser.parseRelevanceJudgements();
+//    List<Document> documents = cranfieldParser.parseDocuments();
+//    List<Query> queries = cranfieldParser.parseQueries();
+//
+//    List<AnalyserObj> analyzers = new ArrayList<>();
+//    analyzers.add(new AnalyserObj(new StandardAnalyzer(), "Standard"));
+//    analyzers.add(new AnalyserObj(new WhitespaceAnalyzer(), "Whitespace"));
+//    analyzers.add(new AnalyserObj(new EnglishAnalyzer(), "English"));
+//    analyzers.add(new AnalyserObj(new StopAnalyzer(), "Stop"));
+//
+//    List<SimilarityObj> similarities = new ArrayList<>();
+//    similarities.add(new SimilarityObj(new ClassicSimilarity(), "Classic"));
+//    similarities.add(new SimilarityObj(new BM25Similarity(), "BM25"));
+//    similarities.add(new SimilarityObj(new BooleanSimilarity(), "Boolean"));
+//
+//    List<Results> resultsList = new ArrayList<>();
+//
+//    for (SimilarityObj similarity : similarities) {
+//      for (AnalyserObj analyzer : analyzers) {
+//        Path indexPath = Paths.get(String.format("index-%s-%s", analyzer.getName(), similarity.getName()));
+//        String resultsPath = String.format("trec-qrels-results-%s-%s.txt", analyzer.getName(), similarity.getName());
+//        createIndex(documents, analyzer.getAnalyzer(), similarity.getSimilarity(), indexPath);
+//        search(queries, analyzer.getAnalyzer(), similarity.getSimilarity(), indexPath, resultsPath);
+//
+//        Results results = new Results();
+//        results.setAnalyzer(analyzer.getName());
+//        results.setSimilarity(similarity.getName());
+//        resultsList.add(runTrecEval(qrelsPath, resultsPath, results, analyzer.getName(), similarity.getName()));
+//      }
+//    }
+//
+//    Results bestResults = getBestResults(resultsList);
+//    System.out.format("\nSystem with %s Analyser and %s scoring performs the best.\n", bestResults.getAnalyzer(), bestResults.getSimilarity());
+//    Analyzer bestAnalyser = analyzers.stream()
+//        .filter(analyserObj -> analyserObj.getName().equals(bestResults.getAnalyzer()))
+//        .map(AnalyserObj::getAnalyzer)
+//        .findFirst()
+//        .get();
+//    Similarity bestSimilarity = similarities.stream()
+//        .filter(similarityObj -> similarityObj.getName().equals(bestResults.getSimilarity()))
+//        .map(SimilarityObj::getSimilarity)
+//        .findFirst()
+//        .get();
+//
+//    runSearchEngine(bestResults, bestAnalyser, bestSimilarity);
   }
 
   private void createIndex(List<Document> documents, Analyzer analyzer, Similarity similarity, Path indexPath) throws Exception {

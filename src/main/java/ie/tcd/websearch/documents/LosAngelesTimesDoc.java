@@ -14,6 +14,15 @@ public class LosAngelesTimesDoc extends BaseDoc {
   private String section;
   private String publication = "Los Angeles Times";
 
+  public LosAngelesTimesDoc() {
+    this.originalId = "";
+    this.graphicCaption = "";
+    this.date = "";
+    this.headline = "";
+    this.byline = "";
+    this.section = "";
+  }
+
   @Override
   public Document convertToLuceneDoc() {
     Document doc = new Document();
