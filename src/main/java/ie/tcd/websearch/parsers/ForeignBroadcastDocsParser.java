@@ -47,7 +47,7 @@ public class ForeignBroadcastDocsParser extends BaseParser {
         e.printStackTrace();
       }
 //      break;
-      System.out.println(String.format("%d/%d files indexed", files.indexOf(file), files.size()));
+//      System.out.println(String.format("%d/%d files indexed", files.indexOf(file), files.size()));
     }
 
     System.out.println(String.format("%s Processed %d docs", DOCUMENT_ROOT_PATH, count));

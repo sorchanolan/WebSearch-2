@@ -35,8 +35,8 @@ public class Main {
   }
 
   public Main() throws Exception {
-    long startTime = System.currentTimeMillis();
     Indexer indexer = new Indexer(new StandardAnalyzer(), new BM25Similarity());
+    System.out.println("Currently indexing... \nPlease wait approximately 7 minutes.");
     FinancialTimesDocsParser ftParser = new FinancialTimesDocsParser(indexer);
     ftParser.getDocs();
     ftParser.removeDocs();
@@ -54,8 +54,6 @@ public class Main {
     frParser.removeDocs();
 
     indexer.closeIndex();
-    long timeMins = ((System.currentTimeMillis() - startTime) / 1000) / 60;
-    System.out.println(String.format("Indexing took %d minutes", timeMins));
 
     TopicParser topicParser = new TopicParser();
     List<Topic> topics = topicParser.parseTopics();
