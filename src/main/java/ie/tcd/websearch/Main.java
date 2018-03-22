@@ -26,37 +26,45 @@ import java.nio.file.Paths;
 import java.util.ArrayList;
 import java.util.Comparator;
 import java.util.List;
+import java.util.stream.Collectors;
 
 public class Main {
-  private String qrelsPath = "QRelsCorrectedforTRECeval.txt";
+  private static String INDEX_PATH = "index";
+  private static String RESULTS_PATH = "results.txt";
 
   public static void main(String[] args) throws Exception {
     new Main();
   }
 
   public Main() throws Exception {
-    Indexer indexer = new Indexer(new StandardAnalyzer(), new BM25Similarity());
-    System.out.println("Currently indexing... \nPlease wait approximately 7 minutes.");
-    FinancialTimesDocsParser ftParser = new FinancialTimesDocsParser(indexer);
-    ftParser.getDocs();
-    ftParser.removeDocs();
-
-    ForeignBroadcastDocsParser fbParser = new ForeignBroadcastDocsParser(indexer);
-    fbParser.getDocs();
-    fbParser.removeDocs();
-
-    LosAngelesTimesDocsParser latParser = new LosAngelesTimesDocsParser(indexer);
-    latParser.getDocs();
-    latParser.removeDocs();
-
-    FederalRegisterDocsParser frParser = new FederalRegisterDocsParser(indexer);
-    frParser.getDocs();
-    frParser.removeDocs();
-
-    indexer.closeIndex();
+//    Indexer indexer = new Indexer(new StandardAnalyzer(), new BM25Similarity(), INDEX_PATH);
+//    System.out.println("Currently indexing... \nPlease wait approximately 7 minutes.");
+//    FinancialTimesDocsParser ftParser = new FinancialTimesDocsParser(indexer);
+//    ftParser.getDocs();
+//    ftParser.removeDocs();
+//
+//    ForeignBroadcastDocsParser fbParser = new ForeignBroadcastDocsParser(indexer);
+//    fbParser.getDocs();
+//    fbParser.removeDocs();
+//
+//    LosAngelesTimesDocsParser latParser = new LosAngelesTimesDocsParser(indexer);
+//    latParser.getDocs();
+//    latParser.removeDocs();
+//
+//    FederalRegisterDocsParser frParser = new FederalRegisterDocsParser(indexer);
+//    frParser.getDocs();
+//    frParser.removeDocs();
+//
+//    indexer.closeIndex();
 
     TopicParser topicParser = new TopicParser();
     List<Topic> topics = topicParser.parseTopics();
+
+    List<String> topicTitles = topics.stream()
+        .map(Topic::getTitle)
+        .collect(Collectors.toList());
+    search(topicTitles, new StandardAnalyzer(), new BM25Similarity());
+
 
 //    CranfieldParser cranfieldParser = new CranfieldParser();
 //    cranfieldParser.parseRelevanceJudgements();
@@ -120,30 +128,34 @@ public class Main {
     directory.close();
   }
 
-  private void search(List<Query> queries, Analyzer analyzer, Similarity similarity, Path indexPath, String resultsPath) throws Exception {
-    IndexReader reader = DirectoryReader.open(FSDirectory.open(indexPath));
+  private void search(List<String> queries, Analyzer analyzer, Similarity similarity) throws Exception {
+    IndexReader reader = DirectoryReader.open(FSDirectory.open(Paths.get(INDEX_PATH)));
     IndexSearcher searcher = new IndexSearcher(reader);
     searcher.setSimilarity(similarity);
 
     MultiFieldQueryParser queryParser = new MultiFieldQueryParser(
-        new String[] {"text", "title", "author", "journal", "index"},
+        new String[] {"text", "doc_number", "author", "headline", "originalId", "byline", "meta", "date", "publication", "length"},
         analyzer);
 
-    PrintWriter writer = new PrintWriter(resultsPath, "UTF-8");
+    PrintWriter writer = new PrintWriter(RESULTS_PATH, "UTF-8");
 
+    System.out.println("Results output:\n");
     for (int queryIndex = 1; queryIndex <= queries.size(); queryIndex++) {
-      String currentQuery = queries.get(queryIndex-1).getQuery();
+      String currentQuery = queries.get(queryIndex-1);
       currentQuery = QueryParser.escape(currentQuery);
       org.apache.lucene.search.Query query = queryParser.parse(currentQuery);
-      TopDocs results = searcher.search(query, 1400);
+      TopDocs results = searcher.search(query, 1000);
       ScoreDoc[] hits = results.scoreDocs;
 
       for (int hitIndex = 0; hitIndex < hits.length; hitIndex++) {
         ScoreDoc hit = hits[hitIndex];
         int docIndex = hit.doc + 1;
-        writer.format("%d 0 %d %d %f 0 \n", queryIndex, docIndex, hitIndex, hit.score);
+        String line = String.format("%d 0 %d %d %f 0 ", queryIndex, docIndex, hitIndex, hit.score);
+        System.out.println(line);
+        writer.println(line);
       }
     }
+    System.out.println("Results stored in file 'results.txt'.\n");
     writer.close();
   }
 

@@ -11,16 +11,15 @@ import org.apache.lucene.store.FSDirectory;
 import java.nio.file.Paths;
 
 public class Indexer {
-  private static String INDEX_PATH = "index";
   private IndexWriterConfig config;
   private Directory directory;
   private final IndexWriter writer;
 
-  public Indexer(Analyzer analyzer, Similarity similarity) throws Exception {
+  public Indexer(Analyzer analyzer, Similarity similarity, String indexPath) throws Exception {
     config = new IndexWriterConfig(analyzer);
     config.setOpenMode(IndexWriterConfig.OpenMode.CREATE);
     config.setSimilarity(similarity);
-    directory = FSDirectory.open(Paths.get(INDEX_PATH));
+    directory = FSDirectory.open(Paths.get(indexPath));
     writer = new IndexWriter(directory, config);
   }
 
