@@ -21,11 +21,13 @@ import org.apache.lucene.store.Directory;
 import org.apache.lucene.store.FSDirectory;
 
 import java.io.*;
+import java.nio.file.Files;
 import java.nio.file.Path;
 import java.nio.file.Paths;
 import java.util.ArrayList;
 import java.util.Comparator;
 import java.util.List;
+import java.util.Scanner;
 import java.util.stream.Collectors;
 
 public class Main {
@@ -37,26 +39,37 @@ public class Main {
   }
 
   public Main() throws Exception {
-    Indexer indexer = new Indexer(new StandardAnalyzer(), new BM25Similarity(), INDEX_PATH);
-    System.out.println("Currently indexing... \nPlease wait approximately 7 minutes.");
-    FinancialTimesDocsParser ftParser = new FinancialTimesDocsParser(indexer);
-    ftParser.getDocs();
-    ftParser.removeDocs();
+    boolean doIndexing = true;
+    if (Files.exists(Paths.get(INDEX_PATH))) {
+      System.out.println("Index already exists. Would you like to reindex the files? (y/n)");
+      Scanner scanner = new Scanner(System.in);
+      String input = scanner.next();
+      if (input.equals("n")) {
+        doIndexing = false;
+      }
+    }
 
-    ForeignBroadcastDocsParser fbParser = new ForeignBroadcastDocsParser(indexer);
-    fbParser.getDocs();
-    fbParser.removeDocs();
+    if (doIndexing) {
+      Indexer indexer = new Indexer(new StandardAnalyzer(), new BM25Similarity(), INDEX_PATH);
+      System.out.println("Currently indexing... \nPlease wait approximately 7 minutes.");
+      FinancialTimesDocsParser ftParser = new FinancialTimesDocsParser(indexer);
+      ftParser.getDocs();
+      ftParser.removeDocs();
 
-    LosAngelesTimesDocsParser latParser = new LosAngelesTimesDocsParser(indexer);
-    latParser.getDocs();
-    latParser.removeDocs();
+      ForeignBroadcastDocsParser fbParser = new ForeignBroadcastDocsParser(indexer);
+      fbParser.getDocs();
+      fbParser.removeDocs();
 
-    FederalRegisterDocsParser frParser = new FederalRegisterDocsParser(indexer);
-    frParser.getDocs();
-    frParser.removeDocs();
+      LosAngelesTimesDocsParser latParser = new LosAngelesTimesDocsParser(indexer);
+      latParser.getDocs();
+      latParser.removeDocs();
 
-    indexer.closeIndex();
+      FederalRegisterDocsParser frParser = new FederalRegisterDocsParser(indexer);
+      frParser.getDocs();
+      frParser.removeDocs();
 
+      indexer.closeIndex();
+    }
     TopicParser topicParser = new TopicParser();
     List<Topic> topics = topicParser.parseTopics();
 
