@@ -74,10 +74,10 @@ public class Main {
     List<Topic> topics = topicParser.parseTopics();
 
     List<String> topicTitles = topics.stream()
-        .map(Topic::getTitle)
+        .map(topic -> topic.getTitle() + " " + topic.getDescription())
         .collect(Collectors.toList());
     search(topicTitles, new StandardAnalyzer(), new BM25Similarity());
-//    runTrecEval("qrelstrec8.txt", RESULTS_PATH);
+    runTrecEval("qrelstrec8.txt", RESULTS_PATH);
 
 //    CranfieldParser cranfieldParser = new CranfieldParser();
 //    cranfieldParser.parseRelevanceJudgements();

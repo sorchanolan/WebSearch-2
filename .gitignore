@@ -27,3 +27,5 @@ docs/*
 trec_eval/*
 *.iml
 index/*
+results.txt
+qrels*
