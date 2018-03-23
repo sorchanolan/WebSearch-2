@@ -37,25 +37,25 @@ public class Main {
   }
 
   public Main() throws Exception {
-//    Indexer indexer = new Indexer(new StandardAnalyzer(), new BM25Similarity(), INDEX_PATH);
-//    System.out.println("Currently indexing... \nPlease wait approximately 7 minutes.");
-//    FinancialTimesDocsParser ftParser = new FinancialTimesDocsParser(indexer);
-//    ftParser.getDocs();
-//    ftParser.removeDocs();
-//
-//    ForeignBroadcastDocsParser fbParser = new ForeignBroadcastDocsParser(indexer);
-//    fbParser.getDocs();
-//    fbParser.removeDocs();
-//
-//    LosAngelesTimesDocsParser latParser = new LosAngelesTimesDocsParser(indexer);
-//    latParser.getDocs();
-//    latParser.removeDocs();
-//
-//    FederalRegisterDocsParser frParser = new FederalRegisterDocsParser(indexer);
-//    frParser.getDocs();
-//    frParser.removeDocs();
-//
-//    indexer.closeIndex();
+    Indexer indexer = new Indexer(new StandardAnalyzer(), new BM25Similarity(), INDEX_PATH);
+    System.out.println("Currently indexing... \nPlease wait approximately 7 minutes.");
+    FinancialTimesDocsParser ftParser = new FinancialTimesDocsParser(indexer);
+    ftParser.getDocs();
+    ftParser.removeDocs();
+
+    ForeignBroadcastDocsParser fbParser = new ForeignBroadcastDocsParser(indexer);
+    fbParser.getDocs();
+    fbParser.removeDocs();
+
+    LosAngelesTimesDocsParser latParser = new LosAngelesTimesDocsParser(indexer);
+    latParser.getDocs();
+    latParser.removeDocs();
+
+    FederalRegisterDocsParser frParser = new FederalRegisterDocsParser(indexer);
+    frParser.getDocs();
+    frParser.removeDocs();
+
+    indexer.closeIndex();
 
     TopicParser topicParser = new TopicParser();
     List<Topic> topics = topicParser.parseTopics();

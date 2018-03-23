@@ -46,7 +46,7 @@ public class FinancialTimesDocsParser extends BaseParser {
 //          this.financialTimesDocs.add(ftDoc);
         }
       } catch (IOException | JDOMException e) {
-        e.printStackTrace();
+//        e.printStackTrace();
       }
     }
 

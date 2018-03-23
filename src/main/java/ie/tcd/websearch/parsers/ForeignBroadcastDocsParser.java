@@ -44,7 +44,7 @@ public class ForeignBroadcastDocsParser extends BaseParser {
         }
 
       } catch (IOException | JDOMException e) {
-        e.printStackTrace();
+//        e.printStackTrace();
       }
     }
 
