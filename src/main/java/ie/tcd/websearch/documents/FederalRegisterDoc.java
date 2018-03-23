@@ -10,6 +10,11 @@ public class FederalRegisterDoc extends BaseDoc {
   private String parent;
   private String publication = "Federal Register";
 
+  public FederalRegisterDoc() {
+    this.date = "";
+    this.parent = "";
+  }
+
   @Override
   public Document convertToLuceneDoc() {
     Document doc = new Document();
