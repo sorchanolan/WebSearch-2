@@ -31,7 +31,7 @@ public class LosAngelesTimesDocsParser extends BaseParser {
           laDoc.setDate(Optional.ofNullable(doc.getChildTextTrim("DATE")).orElse(""));
           laDoc.setHeadline(Optional.ofNullable(doc.getChildTextTrim("HEADLINE")).orElse(""));
           laDoc.setByline(Optional.ofNullable(doc.getChildTextTrim("BYLINE")).orElse(""));
-          laDoc.setText(Optional.ofNullable(doc.getChildTextTrim("TEXT")).orElse(""));
+          laDoc.setText(Optional.ofNullable(doc.getChildTextTrim("TEXT")).orElse("").replace("\n", " "));
           laDoc.setGraphicCaption(Optional.ofNullable(doc.getChildTextTrim("GRAPHIC")).orElse(""));
           laDoc.setSection(Optional.ofNullable(doc.getChildTextTrim("SECTION")).orElse(""));
 

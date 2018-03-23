@@ -33,7 +33,7 @@ public class ForeignBroadcastDocsParser extends BaseParser {
           fbDoc.setDate(Optional.ofNullable(doc.getChildTextTrim("DATE1")).orElse(""));
           fbDoc.setHeadline(Optional.ofNullable(doc.getChildTextTrim("HT")).orElse(""));
           fbDoc.setByline(Optional.ofNullable(doc.getChildTextTrim("H4")).orElse(""));
-          fbDoc.setText(Optional.ofNullable(doc.getChildTextTrim("TEXT")).orElse(""));
+          fbDoc.setText(Optional.ofNullable(doc.getChildTextTrim("TEXT")).orElse("").replace("\n", " "));
 
           if (fbDoc.getText() != null) {
             fbDoc.setLength(fbDoc.getText().length());

@@ -64,7 +64,7 @@ public class Main {
         .map(Topic::getTitle)
         .collect(Collectors.toList());
     search(topicTitles, new StandardAnalyzer(), new BM25Similarity());
-
+//    runTrecEval("qrelstrec8.txt", RESULTS_PATH);
 
 //    CranfieldParser cranfieldParser = new CranfieldParser();
 //    cranfieldParser.parseRelevanceJudgements();
@@ -114,20 +114,6 @@ public class Main {
 //    runSearchEngine(bestResults, bestAnalyser, bestSimilarity);
   }
 
-  private void createIndex(List<Document> documents, Analyzer analyzer, Similarity similarity, Path indexPath) throws Exception {
-    IndexWriterConfig config = new IndexWriterConfig(analyzer);
-    config.setOpenMode(IndexWriterConfig.OpenMode.CREATE);
-    config.setSimilarity(similarity);
-    Directory directory = FSDirectory.open(indexPath);
-
-    final IndexWriter writer = new IndexWriter(directory, config);
-    for (Document document : documents) {
-      writer.addDocument(document);
-    }
-    writer.close();
-    directory.close();
-  }
-
   private void search(List<String> queries, Analyzer analyzer, Similarity similarity) throws Exception {
     IndexReader reader = DirectoryReader.open(FSDirectory.open(Paths.get(INDEX_PATH)));
     IndexSearcher searcher = new IndexSearcher(reader);
@@ -149,8 +135,10 @@ public class Main {
 
       for (int hitIndex = 0; hitIndex < hits.length; hitIndex++) {
         ScoreDoc hit = hits[hitIndex];
-        int docIndex = hit.doc + 1;
-        String line = String.format("%d 0 %d %d %f 0 ", queryIndex, docIndex, hitIndex, hit.score);
+        int docIndex = hit.doc;
+        int queryId = 400 + queryIndex;
+        String docId = reader.document(docIndex).get("doc_number");
+        String line = String.format("%d 0 %s %d %f 0 ", queryId, docId, hitIndex, hit.score);
         System.out.println(line);
         writer.println(line);
       }
@@ -182,7 +170,7 @@ public class Main {
     return documents;
   }
 
-  private Results runTrecEval(String groundTruthPath, String resultsPath, Results results, String analyser, String similarity) throws Exception {
+  private void runTrecEval(String groundTruthPath, String resultsPath) throws Exception {
     String[] command = {"./trec_eval/trec_eval", groundTruthPath, resultsPath};
     ProcessBuilder processBuilder = new ProcessBuilder(command);
 
@@ -192,27 +180,27 @@ public class Main {
     BufferedReader br = new BufferedReader(isr);
     String line;
 
-    System.out.format("\n%s Analyser, %s Similarity\n", analyser, similarity);
+//    System.out.format("\n%s Analyser, %s Similarity\n", analyser, similarity);
 
     while ((line = br.readLine()) != null) {
       System.out.println(line);
-      if (line.startsWith("map")) {
-        results.setMap(Double.parseDouble(line.split("\\s+")[2]));
-      } else if (line.startsWith("gm_map")) {
-        results.setGm_map(Double.parseDouble(line.split("\\s+")[2]));
-      } else if (line.startsWith("P_5 ")) {
-        results.setP_5(Double.parseDouble(line.split("\\s+")[2]));
-      } else if (line.startsWith("P_10 ")) {
-        results.setP_10(Double.parseDouble(line.split("\\s+")[2]));
-      } else if (line.startsWith("P_15 ")) {
-        results.setP_15(Double.parseDouble(line.split("\\s+")[2]));
-      } else if (line.startsWith("Rprec")) {
-        results.setRPrec(Double.parseDouble(line.split("\\s+")[2]));
-      }
+//      if (line.startsWith("map")) {
+//        results.setMap(Double.parseDouble(line.split("\\s+")[2]));
+//      } else if (line.startsWith("gm_map")) {
+//        results.setGm_map(Double.parseDouble(line.split("\\s+")[2]));
+//      } else if (line.startsWith("P_5 ")) {
+//        results.setP_5(Double.parseDouble(line.split("\\s+")[2]));
+//      } else if (line.startsWith("P_10 ")) {
+//        results.setP_10(Double.parseDouble(line.split("\\s+")[2]));
+//      } else if (line.startsWith("P_15 ")) {
+//        results.setP_15(Double.parseDouble(line.split("\\s+")[2]));
+//      } else if (line.startsWith("Rprec")) {
+//        results.setRPrec(Double.parseDouble(line.split("\\s+")[2]));
+//      }
     }
 
     process.waitFor();
-    return results;
+//    return results;
   }
 
 

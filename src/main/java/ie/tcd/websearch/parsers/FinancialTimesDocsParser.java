@@ -29,7 +29,7 @@ public class FinancialTimesDocsParser extends BaseParser {
           ftDoc.setDocNo(Optional.ofNullable(doc.getChildTextTrim("DOCNO")).orElse(""));
           ftDoc.setProfile(Optional.ofNullable(doc.getChildTextTrim("PROFILE")).orElse(""));
           ftDoc.setDate(Optional.ofNullable(doc.getChildTextTrim("DATE")).orElse(""));
-          ftDoc.setText(Optional.ofNullable(doc.getChildTextTrim("TEXT")).orElse(""));
+          ftDoc.setText(Optional.ofNullable(doc.getChildTextTrim("TEXT")).orElse("").replace("\n", " "));
           ftDoc.setPublication(Optional.ofNullable(doc.getChildTextTrim("PUB")).orElse(""));
           ftDoc.setPage(Optional.ofNullable(doc.getChildTextTrim("PAGE")).orElse(""));
 

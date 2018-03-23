@@ -28,7 +28,7 @@ public class FederalRegisterDocsParser extends BaseParser {
 
           frDoc.setDocNo(Optional.ofNullable(doc.getChildTextTrim("DOCNO")).orElse(""));
           frDoc.setDate(Optional.ofNullable(doc.getChildTextTrim("DATE")).orElse(""));
-          frDoc.setText(Optional.ofNullable(doc.getChildTextTrim("TEXT")).orElse(""));
+          frDoc.setText(Optional.ofNullable(doc.getChildTextTrim("TEXT")).orElse("").replace("\n", " "));
           frDoc.setParent(Optional.ofNullable(doc.getChildTextTrim("PARENT")).orElse(""));
 
           if (frDoc.getText() != null) {
