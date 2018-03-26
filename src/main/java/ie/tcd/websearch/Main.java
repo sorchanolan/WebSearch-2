@@ -28,6 +28,9 @@ import java.util.ArrayList;
 import java.util.Comparator;
 import java.util.List;
 import java.util.Scanner;
+import java.util.concurrent.ExecutorService;
+import java.util.concurrent.Executors;
+import java.util.concurrent.TimeUnit;
 import java.util.stream.Collectors;
 
 public class Main {
@@ -52,24 +55,22 @@ public class Main {
     if (doIndexing) {
       Indexer indexer = new Indexer(new StandardAnalyzer(), new BM25Similarity(), INDEX_PATH);
       System.out.println("Currently indexing... \nPlease wait approximately 7 minutes.");
-      FinancialTimesDocsParser ftParser = new FinancialTimesDocsParser(indexer);
-      ftParser.getDocs();
-      ftParser.removeDocs();
+      ExecutorService taskExecutor = Executors.newFixedThreadPool(4);
+      taskExecutor.execute(new FinancialTimesDocsParser(indexer).parse());
+      taskExecutor.execute(new ForeignBroadcastDocsParser(indexer).parse());
+      taskExecutor.execute(new LosAngelesTimesDocsParser(indexer).parse());
+      taskExecutor.execute(new FederalRegisterDocsParser(indexer).parse());
 
-      ForeignBroadcastDocsParser fbParser = new ForeignBroadcastDocsParser(indexer);
-      fbParser.getDocs();
-      fbParser.removeDocs();
+      taskExecutor.shutdown();
+      try {
+        taskExecutor.awaitTermination(Long.MAX_VALUE, TimeUnit.NANOSECONDS);
+        indexer.closeIndex();
+      } catch (InterruptedException e) {
+        e.printStackTrace();
+      }
 
-      LosAngelesTimesDocsParser latParser = new LosAngelesTimesDocsParser(indexer);
-      latParser.getDocs();
-      latParser.removeDocs();
-
-      FederalRegisterDocsParser frParser = new FederalRegisterDocsParser(indexer);
-      frParser.getDocs();
-      frParser.removeDocs();
-
-      indexer.closeIndex();
     }
+
     TopicParser topicParser = new TopicParser();
     List<Topic> topics = topicParser.parseTopics();
 

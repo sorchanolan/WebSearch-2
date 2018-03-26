@@ -1,5 +1,6 @@
 package ie.tcd.websearch.parsers;
 
+import ie.tcd.websearch.Indexer;
 import org.jdom2.Document;
 import org.jdom2.Element;
 import org.jdom2.JDOMException;
@@ -17,6 +18,8 @@ import java.util.List;
 import java.util.stream.Collectors;
 
 public class BaseParser {
+
+  public Indexer indexer;
 
   public List<Path> getFiles(String documentPath) {
     List<Path> files = new ArrayList<>();
