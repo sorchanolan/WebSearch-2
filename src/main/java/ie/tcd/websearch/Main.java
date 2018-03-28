@@ -13,6 +13,7 @@ import org.apache.lucene.index.IndexWriter;
 import org.apache.lucene.index.IndexWriterConfig;
 import org.apache.lucene.queryparser.classic.MultiFieldQueryParser;
 import org.apache.lucene.queryparser.classic.QueryParser;
+import org.apache.lucene.queryparser.simple.SimpleQueryParser;
 import org.apache.lucene.search.IndexSearcher;
 import org.apache.lucene.search.ScoreDoc;
 import org.apache.lucene.search.TopDocs;
@@ -36,6 +37,7 @@ import java.util.stream.Collectors;
 public class Main {
   private static String INDEX_PATH = "index";
   private static String RESULTS_PATH = "results.txt";
+  private static String GROUND_TRUTH_PATH = "qrels.assignment2.part1";
 
   public static void main(String[] args) throws Exception {
     new Main();
@@ -53,7 +55,7 @@ public class Main {
     }
 
     if (doIndexing) {
-      Indexer indexer = new Indexer(new StandardAnalyzer(), new BM25Similarity(), INDEX_PATH);
+      Indexer indexer = new Indexer(new EnglishAnalyzer(), new BM25Similarity(), INDEX_PATH);
       System.out.println("Currently indexing... \nPlease wait approximately 7 minutes.");
       ExecutorService taskExecutor = Executors.newFixedThreadPool(4);
       taskExecutor.execute(new FinancialTimesDocsParser(indexer).parse());
@@ -74,11 +76,8 @@ public class Main {
     TopicParser topicParser = new TopicParser();
     List<Topic> topics = topicParser.parseTopics();
 
-    List<String> topicTitles = topics.stream()
-        .map(topic -> topic.getTitle() + " " + topic.getDescription())
-        .collect(Collectors.toList());
-    search(topicTitles, new StandardAnalyzer(), new BM25Similarity());
-//    runTrecEval("qrelstrec8.txt", RESULTS_PATH);
+    search(topics, new EnglishAnalyzer(), new BM25Similarity());
+    runTrecEval(GROUND_TRUTH_PATH, RESULTS_PATH);
 
 //    CranfieldParser cranfieldParser = new CranfieldParser();
 //    cranfieldParser.parseRelevanceJudgements();
@@ -128,21 +127,25 @@ public class Main {
 //    runSearchEngine(bestResults, bestAnalyser, bestSimilarity);
   }
 
-  private void search(List<String> queries, Analyzer analyzer, Similarity similarity) throws Exception {
+  private void search(List<Topic> topics, Analyzer analyzer, Similarity similarity) throws Exception {
+    List<String> queries = topics.stream()
+            .map(Topic::getQuery)
+            .collect(Collectors.toList());
+
     IndexReader reader = DirectoryReader.open(FSDirectory.open(Paths.get(INDEX_PATH)));
     IndexSearcher searcher = new IndexSearcher(reader);
     searcher.setSimilarity(similarity);
 
-    MultiFieldQueryParser queryParser = new MultiFieldQueryParser(
-        new String[] {"text", "doc_number", "author", "headline", "originalId", "byline", "meta", "date", "publication", "length"},
-        analyzer);
+//    MultiFieldQueryParser queryParser = new MultiFieldQueryParser(
+//        new String[] {"text", "doc_number", "author", "headline", "originalId", "byline", "meta", "date", "publication", "length"},
+//        analyzer);
+    SimpleQueryParser queryParser = new SimpleQueryParser(analyzer, "text");
 
     PrintWriter writer = new PrintWriter(RESULTS_PATH, "UTF-8");
 
-    System.out.println("Results output:\n");
     for (int queryIndex = 1; queryIndex <= queries.size(); queryIndex++) {
       String currentQuery = queries.get(queryIndex-1);
-      currentQuery = QueryParser.escape(currentQuery);
+//      currentQuery = QueryParser.escape(currentQuery);
       org.apache.lucene.search.Query query = queryParser.parse(currentQuery);
       TopDocs results = searcher.search(query, 1000);
       ScoreDoc[] hits = results.scoreDocs;
@@ -153,7 +156,6 @@ public class Main {
         int queryId = 400 + queryIndex;
         String docId = reader.document(docIndex).get("doc_number");
         String line = String.format("%d 0 %s %d %f 0 ", queryId, docId, hitIndex, hit.score);
-        System.out.println(line);
         writer.println(line);
       }
     }
