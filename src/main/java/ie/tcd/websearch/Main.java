@@ -145,7 +145,7 @@ public class Main {
 
     for (int queryIndex = 1; queryIndex <= queries.size(); queryIndex++) {
       String originalQuery = queries.get(queryIndex-1);
-      String currentQuery = queryExpansion(queries.get(queryIndex-1), queryParser, searcher, reader);
+      String currentQuery = queryExpansion(originalQuery, queryParser, searcher, reader);
       Query query = queryParser.parse(currentQuery);
       TopDocs results = searcher.search(query, 1000);
       ScoreDoc[] hits = results.scoreDocs;
@@ -161,10 +161,33 @@ public class Main {
         singleQueryWriter.println(line);
       }
       singleQueryWriter.close();
-//      runTrecEval(GROUND_TRUTH_PATH, SINGLE_QUERY_RESULTS_PATH);
+      runTrecEval(GROUND_TRUTH_PATH, SINGLE_QUERY_RESULTS_PATH);
     }
     System.out.println("Results stored in file 'results.txt'.\n");
     writer.close();
+  }
+
+  private List<Document> searchInputQuery(String query, Analyzer analyzer, Similarity similarity, Path indexPath, int numDocs) throws Exception {
+    IndexReader reader = DirectoryReader.open(FSDirectory.open(indexPath));
+    IndexSearcher searcher = new IndexSearcher(reader);
+    searcher.setSimilarity(similarity);
+
+    MultiFieldQueryParser queryParser = new MultiFieldQueryParser(
+        new String[] {"text", "title", "author", "journal", "index"},
+        analyzer);
+//    query = QueryParser.escape(query);
+    org.apache.lucene.search.Query searchQuery = queryParser.parse(query);
+    TopDocs results = searcher.search(searchQuery, numDocs);
+    ScoreDoc[] hits = results.scoreDocs;
+
+    List<Document> documents = new ArrayList<>();
+    for (int hitIndex = 0; hitIndex < hits.length; hitIndex++) {
+      ScoreDoc hit = hits[hitIndex];
+      Document document = reader.document(hit.doc);
+      documents.add(document);
+      System.out.format("%d. %s\n", hitIndex+1, document.get("title"));
+    }
+    return documents;
   }
 
   private String queryExpansion(String currentQuery, SimpleQueryParser queryParser, IndexSearcher searcher, IndexReader reader) throws Exception {
@@ -316,28 +339,5 @@ public class Main {
       String text = document.get("text").replaceAll("((?:\\w+\\s){10}\\w+)(\\s)", "$1\n");
       System.out.print(text);
     }
-  }
-
-  private List<Document> searchInputQuery(String query, Analyzer analyzer, Similarity similarity, Path indexPath, int numDocs) throws Exception {
-    IndexReader reader = DirectoryReader.open(FSDirectory.open(indexPath));
-    IndexSearcher searcher = new IndexSearcher(reader);
-    searcher.setSimilarity(similarity);
-
-    MultiFieldQueryParser queryParser = new MultiFieldQueryParser(
-        new String[] {"text", "title", "author", "journal", "index"},
-        analyzer);
-//    query = QueryParser.escape(query);
-    org.apache.lucene.search.Query searchQuery = queryParser.parse(query);
-    TopDocs results = searcher.search(searchQuery, numDocs);
-    ScoreDoc[] hits = results.scoreDocs;
-
-    List<Document> documents = new ArrayList<>();
-    for (int hitIndex = 0; hitIndex < hits.length; hitIndex++) {
-      ScoreDoc hit = hits[hitIndex];
-      Document document = reader.document(hit.doc);
-      documents.add(document);
-      System.out.format("%d. %s\n", hitIndex+1, document.get("title"));
-    }
-    return documents;
   }
 }
