@@ -53,7 +53,7 @@ public class Main {
     }
 
     if (doIndexing) {
-      Indexer indexer = new Indexer(new StandardAnalyzer(), new BM25Similarity(), INDEX_PATH);
+      Indexer indexer = new Indexer(new EnglishAnalyzer(), new BM25Similarity(), INDEX_PATH);
       System.out.println("Currently indexing... \nPlease wait approximately 7 minutes.");
       ExecutorService taskExecutor = Executors.newFixedThreadPool(4);
       taskExecutor.execute(new FinancialTimesDocsParser(indexer).parse());
@@ -68,7 +68,6 @@ public class Main {
       } catch (InterruptedException e) {
         e.printStackTrace();
       }
-
     }
 
     TopicParser topicParser = new TopicParser();
@@ -77,8 +76,8 @@ public class Main {
     List<String> topicTitles = topics.stream()
         .map(topic -> topic.getTitle() + " " + topic.getDescription())
         .collect(Collectors.toList());
-    search(topicTitles, new StandardAnalyzer(), new BM25Similarity());
-//    runTrecEval("qrelstrec8.txt", RESULTS_PATH);
+    search(topicTitles, new EnglishAnalyzer(), new BM25Similarity());
+    runTrecEval("qrelstrec8.txt", RESULTS_PATH);
 
 //    CranfieldParser cranfieldParser = new CranfieldParser();
 //    cranfieldParser.parseRelevanceJudgements();
@@ -153,7 +152,7 @@ public class Main {
         int queryId = 400 + queryIndex;
         String docId = reader.document(docIndex).get("doc_number");
         String line = String.format("%d 0 %s %d %f 0 ", queryId, docId, hitIndex, hit.score);
-        System.out.println(line);
+//        System.out.println(line);
         writer.println(line);
       }
     }
