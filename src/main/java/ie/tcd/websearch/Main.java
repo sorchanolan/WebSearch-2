@@ -1,6 +1,7 @@
 package ie.tcd.websearch;
 
 import ie.tcd.websearch.parsers.*;
+import ie.tcd.websearch.util.TextUtil;
 import org.apache.lucene.analysis.Analyzer;
 import org.apache.lucene.analysis.core.StopAnalyzer;
 import org.apache.lucene.analysis.core.WhitespaceAnalyzer;
@@ -15,6 +16,7 @@ import org.apache.lucene.queryparser.classic.MultiFieldQueryParser;
 import org.apache.lucene.queryparser.classic.QueryParser;
 import org.apache.lucene.queryparser.simple.SimpleQueryParser;
 import org.apache.lucene.search.IndexSearcher;
+import org.apache.lucene.search.Query;
 import org.apache.lucene.search.ScoreDoc;
 import org.apache.lucene.search.TopDocs;
 import org.apache.lucene.search.similarities.*;
@@ -25,10 +27,7 @@ import java.io.*;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.nio.file.Paths;
-import java.util.ArrayList;
-import java.util.Comparator;
-import java.util.List;
-import java.util.Scanner;
+import java.util.*;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
 import java.util.concurrent.TimeUnit;
@@ -37,7 +36,9 @@ import java.util.stream.Collectors;
 public class Main {
   private static String INDEX_PATH = "index";
   private static String RESULTS_PATH = "results.txt";
+  private static String SINGLE_QUERY_RESULTS_PATH = "single_query_results.txt";
   private static String GROUND_TRUTH_PATH = "qrels.assignment2.part1";
+//  private static String GROUND_TRUTH_PATH = "qrelstrec8.txt";
 
   public static void main(String[] args) throws Exception {
     new Main();
@@ -143,12 +144,13 @@ public class Main {
     PrintWriter writer = new PrintWriter(RESULTS_PATH, "UTF-8");
 
     for (int queryIndex = 1; queryIndex <= queries.size(); queryIndex++) {
-      String currentQuery = queries.get(queryIndex-1);
-//      currentQuery = QueryParser.escape(currentQuery);
-      org.apache.lucene.search.Query query = queryParser.parse(currentQuery);
+      String originalQuery = queries.get(queryIndex-1);
+      String currentQuery = queryExpansion(queries.get(queryIndex-1), queryParser, searcher, reader);
+      Query query = queryParser.parse(currentQuery);
       TopDocs results = searcher.search(query, 1000);
       ScoreDoc[] hits = results.scoreDocs;
 
+      PrintWriter singleQueryWriter = new PrintWriter(SINGLE_QUERY_RESULTS_PATH, "UTF-8");
       for (int hitIndex = 0; hitIndex < hits.length; hitIndex++) {
         ScoreDoc hit = hits[hitIndex];
         int docIndex = hit.doc;
@@ -156,33 +158,50 @@ public class Main {
         String docId = reader.document(docIndex).get("doc_number");
         String line = String.format("%d 0 %s %d %f 0 ", queryId, docId, hitIndex, hit.score);
         writer.println(line);
+        singleQueryWriter.println(line);
       }
+      singleQueryWriter.close();
+//      runTrecEval(GROUND_TRUTH_PATH, SINGLE_QUERY_RESULTS_PATH);
     }
     System.out.println("Results stored in file 'results.txt'.\n");
     writer.close();
   }
 
-  private List<Document> searchInputQuery(String query, Analyzer analyzer, Similarity similarity, Path indexPath, int numDocs) throws Exception {
-    IndexReader reader = DirectoryReader.open(FSDirectory.open(indexPath));
-    IndexSearcher searcher = new IndexSearcher(reader);
-    searcher.setSimilarity(similarity);
+  private String queryExpansion(String currentQuery, SimpleQueryParser queryParser, IndexSearcher searcher, IndexReader reader) throws Exception {
+    int numTopDocsUsed = 15;
+    int numTopWordsUsed = 8;
+    int frequencyThreshold = 5;
 
-    MultiFieldQueryParser queryParser = new MultiFieldQueryParser(
-        new String[] {"text", "title", "author", "journal", "index"},
-        analyzer);
-    query = QueryParser.escape(query);
-    org.apache.lucene.search.Query searchQuery = queryParser.parse(query);
-    TopDocs results = searcher.search(searchQuery, numDocs);
+    Query query = queryParser.parse(currentQuery);
+    TopDocs results = searcher.search(query, 1000);
     ScoreDoc[] hits = results.scoreDocs;
+    TextUtil textUtil = new TextUtil();
+    Map<String, Integer> wordFreqency = new HashMap<>();
 
-    List<Document> documents = new ArrayList<>();
-    for (int hitIndex = 0; hitIndex < hits.length; hitIndex++) {
+    for (int hitIndex = 0; hitIndex < numTopDocsUsed; hitIndex++) {
       ScoreDoc hit = hits[hitIndex];
-      Document document = reader.document(hit.doc);
-      documents.add(document);
-      System.out.format("%d. %s\n", hitIndex+1, document.get("title"));
+      String text = reader.document(hit.doc).get("text");// + " " + reader.document(hit.doc).get("headline");
+      wordFreqency = textUtil.getWordFrequency(text, wordFreqency);
     }
-    return documents;
+
+//    Map<String, Integer> finalWordFreqency = wordFreqency;
+//    String newQuery = Arrays.stream(query.toString().replace("text:", "").split(" "))
+//        .distinct()
+//        .filter(finalWordFreqency::containsKey)
+//        .filter(word -> finalWordFreqency.get(word) > frequencyThreshold)
+//        .collect(Collectors.joining( " " ));
+
+    Iterator<Map.Entry<String, Integer>> wordFreqIterator = wordFreqency.entrySet().iterator();
+    StringBuilder queryBuilder = new StringBuilder();
+    queryBuilder.append(query.toString().replace("text:", "")).append(" ");
+
+    for (int wordFreqIndex = 0; wordFreqIndex < numTopWordsUsed; wordFreqIndex++) {
+      Map.Entry<String, Integer> word = wordFreqIterator.next();
+      if (!query.toString().contains(word.getKey())) {
+        queryBuilder.append(word.getKey()).append(" ");
+      }
+    }
+    return queryBuilder.toString();
   }
 
   private void runTrecEval(String groundTruthPath, String resultsPath) throws Exception {
@@ -297,5 +316,28 @@ public class Main {
       String text = document.get("text").replaceAll("((?:\\w+\\s){10}\\w+)(\\s)", "$1\n");
       System.out.print(text);
     }
+  }
+
+  private List<Document> searchInputQuery(String query, Analyzer analyzer, Similarity similarity, Path indexPath, int numDocs) throws Exception {
+    IndexReader reader = DirectoryReader.open(FSDirectory.open(indexPath));
+    IndexSearcher searcher = new IndexSearcher(reader);
+    searcher.setSimilarity(similarity);
+
+    MultiFieldQueryParser queryParser = new MultiFieldQueryParser(
+        new String[] {"text", "title", "author", "journal", "index"},
+        analyzer);
+//    query = QueryParser.escape(query);
+    org.apache.lucene.search.Query searchQuery = queryParser.parse(query);
+    TopDocs results = searcher.search(searchQuery, numDocs);
+    ScoreDoc[] hits = results.scoreDocs;
+
+    List<Document> documents = new ArrayList<>();
+    for (int hitIndex = 0; hitIndex < hits.length; hitIndex++) {
+      ScoreDoc hit = hits[hitIndex];
+      Document document = reader.document(hit.doc);
+      documents.add(document);
+      System.out.format("%d. %s\n", hitIndex+1, document.get("title"));
+    }
+    return documents;
   }
 }
