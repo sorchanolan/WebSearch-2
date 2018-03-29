@@ -24,7 +24,8 @@ hs_err_pid*
 .idea/
 
 docs/*
-trec_eval/*
+trec_eval/
 *.iml
 index/*
 results.txt
+qrelstrec8.txt
