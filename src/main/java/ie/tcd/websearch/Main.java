@@ -214,17 +214,12 @@ public class Main {
 //        .filter(word -> finalWordFreqency.get(word) > frequencyThreshold)
 //        .collect(Collectors.joining( " " ));
 
-    Iterator<Map.Entry<String, Integer>> wordFreqIterator = wordFreqency.entrySet().iterator();
-    StringBuilder queryBuilder = new StringBuilder();
-    queryBuilder.append(query.toString().replace("text:", "")).append(" ");
-
-    for (int wordFreqIndex = 0; wordFreqIndex < numTopWordsUsed; wordFreqIndex++) {
-      Map.Entry<String, Integer> word = wordFreqIterator.next();
-      if (!query.toString().contains(word.getKey())) {
-        queryBuilder.append(word.getKey()).append(" ");
-      }
-    }
-    return queryBuilder.toString();
+    return query.toString().replace("text:", "") + " " +
+        wordFreqency.entrySet().stream()
+            .limit(numTopWordsUsed)
+            .filter(d -> !query.toString().contains(d.getKey()))
+            .map(Map.Entry::getKey)
+            .collect(Collectors.joining(" "));
   }
 
   private void runTrecEval(String groundTruthPath, String resultsPath) throws Exception {
