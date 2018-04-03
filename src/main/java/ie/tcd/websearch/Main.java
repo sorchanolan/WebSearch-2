@@ -1,26 +1,21 @@
 package ie.tcd.websearch;
 
 import ie.tcd.websearch.parsers.*;
+import ie.tcd.websearch.queryExpansion.IndexWrapper;
+import ie.tcd.websearch.queryExpansion.Rocchio;
 import ie.tcd.websearch.util.TextUtil;
 import org.apache.lucene.analysis.Analyzer;
-import org.apache.lucene.analysis.core.StopAnalyzer;
-import org.apache.lucene.analysis.core.WhitespaceAnalyzer;
 import org.apache.lucene.analysis.en.EnglishAnalyzer;
-import org.apache.lucene.analysis.standard.StandardAnalyzer;
 import org.apache.lucene.document.Document;
 import org.apache.lucene.index.DirectoryReader;
 import org.apache.lucene.index.IndexReader;
-import org.apache.lucene.index.IndexWriter;
-import org.apache.lucene.index.IndexWriterConfig;
 import org.apache.lucene.queryparser.classic.MultiFieldQueryParser;
-import org.apache.lucene.queryparser.classic.QueryParser;
 import org.apache.lucene.queryparser.simple.SimpleQueryParser;
 import org.apache.lucene.search.IndexSearcher;
 import org.apache.lucene.search.Query;
 import org.apache.lucene.search.ScoreDoc;
 import org.apache.lucene.search.TopDocs;
 import org.apache.lucene.search.similarities.*;
-import org.apache.lucene.store.Directory;
 import org.apache.lucene.store.FSDirectory;
 
 import java.io.*;
@@ -40,6 +35,13 @@ public class Main {
   private static String GROUND_TRUTH_PATH = "qrels.assignment2.part1";
 //  private static String GROUND_TRUTH_PATH = "qrelstrec8.txt";
 
+  private static final double ALPHA = 1.09;
+  private static final double BETA = 0.55;
+  private static final double K1 = 1.6;
+  private static final double B = 0.75;
+  private static final int NUM_FEEDBACK_DOCS = 22;
+  private static final int NUM_FEEDBACK_TERMS = 60;
+
   public static void main(String[] args) throws Exception {
     new Main();
   }
@@ -55,8 +57,9 @@ public class Main {
       }
     }
 
+    Similarity similarity = new BM25Similarity();
     if (doIndexing) {
-      Indexer indexer = new Indexer(new EnglishAnalyzer(), new BM25Similarity(), INDEX_PATH);
+      Indexer indexer = new Indexer(new EnglishAnalyzer(), similarity, INDEX_PATH);
       System.out.println("Currently indexing... \nPlease wait approximately 7 minutes.");
       ExecutorService taskExecutor = Executors.newFixedThreadPool(4);
       taskExecutor.execute(new FinancialTimesDocsParser(indexer).parse());
@@ -76,7 +79,9 @@ public class Main {
     TopicParser topicParser = new TopicParser();
     List<Topic> topics = topicParser.parseTopics();
 
-    search(topics, new EnglishAnalyzer(), new BM25Similarity());
+    search(topics, similarity);
+
+    System.out.println("--------- MASTER --------");
     runTrecEval(GROUND_TRUTH_PATH, RESULTS_PATH);
 
 //    CranfieldParser cranfieldParser = new CranfieldParser();
@@ -127,27 +132,25 @@ public class Main {
 //    runSearchEngine(bestResults, bestAnalyser, bestSimilarity);
   }
 
-  private void search(List<Topic> topics, Analyzer analyzer, Similarity similarity) throws Exception {
+  private void search(List<Topic> topics, Similarity similarity) throws Exception {
     List<String> queries = topics.stream()
             .map(Topic::getQuery)
             .collect(Collectors.toList());
 
     IndexReader reader = DirectoryReader.open(FSDirectory.open(Paths.get(INDEX_PATH)));
-    IndexSearcher searcher = new IndexSearcher(reader);
-    searcher.setSimilarity(similarity);
-
-//    MultiFieldQueryParser queryParser = new MultiFieldQueryParser(
-//        new String[] {"text", "doc_number", "author", "headline", "originalId", "byline", "meta", "date", "publication", "length"},
-//        analyzer);
-    SimpleQueryParser queryParser = new SimpleQueryParser(analyzer, "text");
-
     PrintWriter writer = new PrintWriter(RESULTS_PATH, "UTF-8");
 
+    IndexWrapper index = new IndexWrapper(INDEX_PATH);
+
     for (int queryIndex = 1; queryIndex <= queries.size(); queryIndex++) {
-      String originalQuery = queries.get(queryIndex-1);
-      String currentQuery = queryExpansion(originalQuery, queryParser, searcher, reader);
-      Query query = queryParser.parse(currentQuery);
-      TopDocs results = searcher.search(query, 1000);
+      Topic topic = topics.get(queryIndex-1);
+      topic.calculateFeatureVector();
+      topic.applyStopper();
+
+      Rocchio rocchioFb = new Rocchio(ALPHA, BETA, K1, B);
+      topic = rocchioFb.expandQuery(index, topic, NUM_FEEDBACK_DOCS, NUM_FEEDBACK_TERMS);
+
+      TopDocs results = index.runQuery(topic, 1000);
       ScoreDoc[] hits = results.scoreDocs;
 
       PrintWriter singleQueryWriter = new PrintWriter(SINGLE_QUERY_RESULTS_PATH, "UTF-8");
@@ -190,38 +193,6 @@ public class Main {
     return documents;
   }
 
-  private String queryExpansion(String currentQuery, SimpleQueryParser queryParser, IndexSearcher searcher, IndexReader reader) throws Exception {
-    int numTopDocsUsed = 15;
-    int numTopWordsUsed = 8;
-    int frequencyThreshold = 5;
-
-    Query query = queryParser.parse(currentQuery);
-    TopDocs results = searcher.search(query, 1000);
-    ScoreDoc[] hits = results.scoreDocs;
-    TextUtil textUtil = new TextUtil();
-    Map<String, Integer> wordFreqency = new HashMap<>();
-
-    for (int hitIndex = 0; hitIndex < numTopDocsUsed; hitIndex++) {
-      ScoreDoc hit = hits[hitIndex];
-      String text = reader.document(hit.doc).get("text");// + " " + reader.document(hit.doc).get("headline");
-      wordFreqency = textUtil.getWordFrequency(text, wordFreqency);
-    }
-
-//    Map<String, Integer> finalWordFreqency = wordFreqency;
-//    String newQuery = Arrays.stream(query.toString().replace("text:", "").split(" "))
-//        .distinct()
-//        .filter(finalWordFreqency::containsKey)
-//        .filter(word -> finalWordFreqency.get(word) > frequencyThreshold)
-//        .collect(Collectors.joining( " " ));
-
-    return query.toString().replace("text:", "") + " " +
-        wordFreqency.entrySet().stream()
-            .limit(numTopWordsUsed)
-            .filter(d -> !query.toString().contains(d.getKey()))
-            .map(Map.Entry::getKey)
-            .collect(Collectors.joining(" "));
-  }
-
   private void runTrecEval(String groundTruthPath, String resultsPath) throws Exception {
     String[] command = {"./trec_eval/trec_eval", groundTruthPath, resultsPath};
     ProcessBuilder processBuilder = new ProcessBuilder(command);
@@ -251,6 +222,7 @@ public class Main {
 //      }
     }
 
+    System.out.println("---");
     process.waitFor();
 //    return results;
   }
