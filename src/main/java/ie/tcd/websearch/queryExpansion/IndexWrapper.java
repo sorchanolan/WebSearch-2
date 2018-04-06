@@ -113,8 +113,17 @@ public class IndexWrapper {
   }
 
   public TopDocs runQuery(Topic topic, int count) {
+    String queryString = topic.getQueryString();
+    return runQuery(queryString, count);
+  }
+
+  public TopDocs runBroadQuery(Topic topic, int count) {
+    String queryString = topic.getDescQueryString();
+    return runQuery(queryString, count);
+  }
+
+  public TopDocs runQuery(String queryString, int count) {
     try {
-      String queryString = topic.getQueryString();
       QueryParser parser = new QueryParser("text", analyzer);
       Query query = parser.parse(queryString);
       searcher.setSimilarity(this.similarity);

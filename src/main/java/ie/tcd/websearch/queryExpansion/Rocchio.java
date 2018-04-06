@@ -4,6 +4,10 @@ import ie.tcd.websearch.Topic;
 import org.apache.lucene.search.ScoreDoc;
 import org.apache.lucene.search.TopDocs;
 
+import java.util.Arrays;
+import java.util.Set;
+import java.util.stream.Collectors;
+
 public class Rocchio {
 
   private double alpha;
@@ -33,11 +37,17 @@ public class Rocchio {
   public Topic expandQuery(IndexWrapper index, Topic topic, int fbDocs, int fbTerms) {
 
     TopDocs hits = index.runQuery(topic, fbDocs);
+    TopDocs broadHits = index.runBroadQuery(topic, fbDocs);
 
     FeatureVector feedbackVec = new FeatureVector();
     ScoreDoc[] docs = hits.scoreDocs;
+    ScoreDoc[] broadDocs = broadHits.scoreDocs;
 
-    for (ScoreDoc doc: docs) {
+    Set<ScoreDoc> uniqueDocs = Arrays.stream(docs).collect(Collectors.toSet());
+    Set<Integer> uniqueDocIds = Arrays.stream(docs).map(d -> d.doc).collect(Collectors.toSet());
+    Arrays.stream(broadDocs).filter(d -> !uniqueDocIds.contains(d.doc)).forEach(d -> uniqueDocs.add(d));
+
+    for (ScoreDoc doc: uniqueDocs) {
       // Get the document tokens and add to the doc vector
       FeatureVector docVec = index.getDocVector(doc.doc, null);
 

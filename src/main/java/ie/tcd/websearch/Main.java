@@ -3,16 +3,13 @@ package ie.tcd.websearch;
 import ie.tcd.websearch.parsers.*;
 import ie.tcd.websearch.queryExpansion.IndexWrapper;
 import ie.tcd.websearch.queryExpansion.Rocchio;
-import ie.tcd.websearch.util.TextUtil;
 import org.apache.lucene.analysis.Analyzer;
 import org.apache.lucene.analysis.en.EnglishAnalyzer;
 import org.apache.lucene.document.Document;
 import org.apache.lucene.index.DirectoryReader;
 import org.apache.lucene.index.IndexReader;
 import org.apache.lucene.queryparser.classic.MultiFieldQueryParser;
-import org.apache.lucene.queryparser.simple.SimpleQueryParser;
 import org.apache.lucene.search.IndexSearcher;
-import org.apache.lucene.search.Query;
 import org.apache.lucene.search.ScoreDoc;
 import org.apache.lucene.search.TopDocs;
 import org.apache.lucene.search.similarities.*;
@@ -26,7 +23,6 @@ import java.util.*;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
 import java.util.concurrent.TimeUnit;
-import java.util.stream.Collectors;
 
 public class Main {
   private static String INDEX_PATH = "index";
@@ -57,9 +53,8 @@ public class Main {
       }
     }
 
-    Similarity similarity = new BM25Similarity();
     if (doIndexing) {
-      Indexer indexer = new Indexer(new EnglishAnalyzer(), similarity, INDEX_PATH);
+      Indexer indexer = new Indexer(new EnglishAnalyzer(), new LMDirichletSimilarity(), INDEX_PATH);
       System.out.println("Currently indexing... \nPlease wait approximately 7 minutes.");
       ExecutorService taskExecutor = Executors.newFixedThreadPool(4);
       taskExecutor.execute(new FinancialTimesDocsParser(indexer).parse());
@@ -79,7 +74,7 @@ public class Main {
     TopicParser topicParser = new TopicParser();
     List<Topic> topics = topicParser.parseTopics();
 
-    search(topics, similarity);
+    search(topics);
 
     System.out.println("--------- MASTER --------");
     runTrecEval(GROUND_TRUTH_PATH, RESULTS_PATH);
@@ -132,17 +127,13 @@ public class Main {
 //    runSearchEngine(bestResults, bestAnalyser, bestSimilarity);
   }
 
-  private void search(List<Topic> topics, Similarity similarity) throws Exception {
-    List<String> queries = topics.stream()
-            .map(Topic::getQuery)
-            .collect(Collectors.toList());
-
+  private void search(List<Topic> topics) throws Exception {
     IndexReader reader = DirectoryReader.open(FSDirectory.open(Paths.get(INDEX_PATH)));
     PrintWriter writer = new PrintWriter(RESULTS_PATH, "UTF-8");
 
     IndexWrapper index = new IndexWrapper(INDEX_PATH);
 
-    for (int queryIndex = 1; queryIndex <= queries.size(); queryIndex++) {
+    for (int queryIndex = 1; queryIndex <= topics.size(); queryIndex++) {
       Topic topic = topics.get(queryIndex-1);
       topic.calculateFeatureVector();
       topic.applyStopper();
@@ -178,7 +169,6 @@ public class Main {
     MultiFieldQueryParser queryParser = new MultiFieldQueryParser(
         new String[] {"text", "title", "author", "journal", "index"},
         analyzer);
-//    query = QueryParser.escape(query);
     org.apache.lucene.search.Query searchQuery = queryParser.parse(query);
     TopDocs results = searcher.search(searchQuery, numDocs);
     ScoreDoc[] hits = results.scoreDocs;
