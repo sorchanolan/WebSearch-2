@@ -28,8 +28,8 @@ public class Main {
   private static String INDEX_PATH = "index";
   private static String RESULTS_PATH = "results.txt";
   private static String SINGLE_QUERY_RESULTS_PATH = "single_query_results.txt";
-//  private static String GROUND_TRUTH_PATH = "qrels.assignment2.part1";
-  private static String GROUND_TRUTH_PATH = "qrelstrec8.txt";
+  private static String GROUND_TRUTH_PATH = "qrels.assignment2.part1";
+//  private static String GROUND_TRUTH_PATH = "qrelstrec8.txt";
 
   private static final double ALPHA = 1.09;
   private static final double BETA = 0.55;
@@ -76,8 +76,8 @@ public class Main {
 
     search(topics);
 
-    System.out.println("--------- MASTER --------");
-    runTrecEval(GROUND_TRUTH_PATH, RESULTS_PATH);
+//    System.out.println("--------- MASTER --------");
+//    runTrecEval(GROUND_TRUTH_PATH, RESULTS_PATH);
   }
 
   private void search(List<Topic> topics) throws Exception {
@@ -97,7 +97,7 @@ public class Main {
       TopDocs results = index.runQuery(topic, 1000);
       ScoreDoc[] hits = results.scoreDocs;
 
-      PrintWriter singleQueryWriter = new PrintWriter(SINGLE_QUERY_RESULTS_PATH, "UTF-8");
+//      PrintWriter singleQueryWriter = new PrintWriter(SINGLE_QUERY_RESULTS_PATH, "UTF-8");
       for (int hitIndex = 0; hitIndex < hits.length; hitIndex++) {
         ScoreDoc hit = hits[hitIndex];
         int docIndex = hit.doc;
@@ -105,10 +105,10 @@ public class Main {
         String docId = reader.document(docIndex).get("doc_number");
         String line = String.format("%d 0 %s %d %f 0 ", queryId, docId, hitIndex, hit.score);
         writer.println(line);
-        singleQueryWriter.println(line);
+//        singleQueryWriter.println(line);
       }
-      singleQueryWriter.close();
-      runTrecEval(GROUND_TRUTH_PATH, SINGLE_QUERY_RESULTS_PATH);
+//      singleQueryWriter.close();
+//      runTrecEval(GROUND_TRUTH_PATH, SINGLE_QUERY_RESULTS_PATH);
     }
     System.out.println("Results stored in file 'results.txt'.\n");
     writer.close();
