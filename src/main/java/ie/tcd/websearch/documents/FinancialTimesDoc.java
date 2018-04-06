@@ -1,5 +1,6 @@
 package ie.tcd.websearch.documents;
 
+import ie.tcd.websearch.util.VectorFieldUtil;
 import lombok.Data;
 import org.apache.lucene.document.*;
 
@@ -26,10 +27,10 @@ public class FinancialTimesDoc extends BaseDoc {
     doc.add(new StringField("doc_number", this.getDocNo(), Field.Store.YES));
     doc.add(new StringField("author", this.getProfile(), Field.Store.YES));
     doc.add(new StringField("date", this.getDate(), Field.Store.YES));
-    doc.add(new TextField("headline", this.getHeadline(), Field.Store.YES));
-    doc.add(new TextField("text", this.getText(), Field.Store.YES));
-    doc.add(new TextField("publication", this.getPublication(), Field.Store.YES));
-    doc.add(new TextField("meta", this.getPage(), Field.Store.YES));
+    doc.add(new VectorFieldUtil("headline", this.getHeadline()).getField());
+    doc.add(new VectorFieldUtil("text", this.getText()).getField());
+    doc.add(new VectorFieldUtil("publication", this.getPublication()).getField());
+    doc.add(new VectorFieldUtil("meta", this.getPage()).getField());
     doc.add(new IntPoint("length", this.getLength()));
 
     return doc;

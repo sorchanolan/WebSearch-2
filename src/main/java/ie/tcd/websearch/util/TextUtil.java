@@ -65,6 +65,10 @@ public class TextUtil {
     return stemmer.getCurrent();
   }
 
+  public Map<String, Integer> getWordFrequency(String s) {
+    return this.getWordFrequency(s, new HashMap<>());
+  }
+
   public Map<String, Integer> getWordFrequency(String s, Map<String, Integer> frequencyMap) {
     s = this.stemText(s);
     s = this.removeStopWords(s);

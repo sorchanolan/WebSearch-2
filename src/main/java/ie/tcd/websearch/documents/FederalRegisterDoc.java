@@ -1,5 +1,6 @@
 package ie.tcd.websearch.documents;
 
+import ie.tcd.websearch.util.VectorFieldUtil;
 import lombok.Data;
 import org.apache.lucene.document.*;
 
@@ -20,9 +21,9 @@ public class FederalRegisterDoc extends BaseDoc {
     Document doc = new Document();
     doc.add(new StringField("doc_number", this.getDocNo(), Field.Store.YES));
     doc.add(new StringField("date", this.getDate(), Field.Store.YES));
-    doc.add(new TextField("text", this.getText(), Field.Store.YES));
-    doc.add(new TextField("publication", this.getPublication(), Field.Store.YES));
-    doc.add(new TextField("meta", this.getParent(), Field.Store.YES));
+    doc.add(new VectorFieldUtil("text", this.getText()).getField());
+    doc.add(new VectorFieldUtil("publication", this.getPublication()).getField());
+    doc.add(new VectorFieldUtil("meta", this.getParent()).getField());
     doc.add(new IntPoint("length", this.getLength()));
 
     return doc;
